@@ -215,6 +215,7 @@ def main():
     print(f"...and saved file to: '{file_path}'")
 
     auto_load_file_path = f"/usr/share/gdb/auto-load{libcxx_so_path}-gdb.py"
+    Path(auto_load_file_path).parent.mkdir(parents=True, exist_ok=True)
     with open(auto_load_file_path, "w") as auto_load_file:
         auto_load_file.write(auto_load_file_contents(download_to, file_name))
     print(f"Wrote GDB auto-load script to: '{auto_load_file_path}'")
