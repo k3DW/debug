@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2025 Braden Ganetsky
+# Copyright 2025-2026 Braden Ganetsky
 # Distributed under the Boost Software License, Version 1.0.
 # https://www.boost.org/LICENSE_1_0.txt
 
@@ -82,7 +82,7 @@ def find_libcxx_version(libcxx_so_path : str) -> str:
         libcxx_so_dir = Path(find_real_path(libcxx_so_path)).parent
         result = run_command(["grep", "-r", cmake_var, libcxx_so_dir])
         lines = result.splitlines()
-        versions = extract_version_numbers(lines, f"set\({cmake_var} ", "\)")
+        versions = extract_version_numbers(lines, f"set\\({cmake_var} ", "\\)")
         if len(versions) == 0:
             raise RuntimeError(f"Unable to find \"{cmake_var}\" in {libcxx_so_dir}")
         elif len(versions) != 1:
@@ -100,7 +100,7 @@ def find_libcxx_version(libcxx_so_path : str) -> str:
 
 def auto_load_file_contents(download_to : str, module_name : str) -> str:
     return (
-        "# Copyright 2025 Braden Ganetsky\n"
+        "# Copyright 2025-2026 Braden Ganetsky\n"
         "# Distributed under the Boost Software License, Version 1.0.\n"
         "# https://www.boost.org/LICENSE_1_0.txt\n"
         "\n"
