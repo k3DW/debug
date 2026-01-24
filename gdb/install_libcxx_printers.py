@@ -77,20 +77,46 @@ def find_libcxx_version(libcxx_so_path : str) -> str:
             if "  libc++" in line]
         return extract_version_numbers(lines, "1:", "~")
 
-    def find_libcxx_so_version(libcxx_so_path : str) -> str:
+    def find_libcxx_so_version_1st_method(libcxx_so_path : str) -> str | None:
         cmake_var = "LLVM_PACKAGE_VERSION"
         libcxx_so_dir = Path(find_real_path(libcxx_so_path)).parent
-        result = run_command(["grep", "-r", cmake_var, libcxx_so_dir])
+        try:
+            result = run_command(["grep", "-r", cmake_var, libcxx_so_dir])
+        except subprocess.CalledProcessError:
+            return None
         lines = result.splitlines()
         versions = extract_version_numbers(lines, f"set\\({cmake_var} ", "\\)")
         if len(versions) == 0:
-            raise RuntimeError(f"Unable to find \"{cmake_var}\" in {libcxx_so_dir}")
+            return None
         elif len(versions) != 1:
             versions = ", ".join(versions)
             raise RuntimeError(f"Found more than one definition of \"{cmake_var}\":\n\t{versions}")
         return versions[0]
 
-    so_version = find_libcxx_so_version(libcxx_so_path)
+    def find_libcxx_so_version_2nd_method(libcxx_so_path : str) -> str | None:
+        try:
+            result = run_command(["strings", libcxx_so_path])
+        except subprocess.CalledProcessError:
+            return None
+        lines = result.splitlines()
+        versions = extract_version_numbers(lines, "\"version\":\"1:", "~\\+\\+2")
+        if len(versions) == 0:
+            return None
+        elif len(versions) != 1:
+            versions = ", ".join(versions)
+            raise RuntimeError(f"Found more than one version in `strings {libcxx_so_path}`:\n\t{versions}")
+        return versions[0]
+
+    methods = [
+        find_libcxx_so_version_1st_method,
+        find_libcxx_so_version_2nd_method,
+    ]
+    so_version = None
+    for method in methods:
+        so_version = method(libcxx_so_path)
+        if so_version is not None:
+            break
+
     package_versions = find_installed_libcxx_package_versions()
     if so_version not in package_versions:
         print(f"Warning: {libcxx_so_path} version found to be {so_version}, does not match installed package versions: {package_versions}")
