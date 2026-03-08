@@ -44,13 +44,13 @@ K3_GDB_NO_INLINE void expect_prints(const T& actual, const char* expected) {
 using size_t = decltype(sizeof(0));
 
 // Use UDL to guarantee usage of a string literal
-constexpr size_t operator ""_k3_gdb_hash(const char* s, size_t size) noexcept {
-    size_t hash = 0;
-    for (size_t i = 0; i != size; ++i) {
+constexpr size_t hash_impl(const size_t hash, const char* const s, const size_t size) noexcept {
+    return size == 0 ? hash : hash_impl(
         // rotl by 1, then add the new char
-        hash = ((hash << 1) | (hash >> 63)) + static_cast<size_t>(s[i]);
-    }
-    return hash;
+        ((hash << 1) | (hash >> 63)) + static_cast<size_t>(*s), s + 1, size - 1);
+}
+constexpr size_t operator ""_k3_gdb_hash(const char* s, size_t size) noexcept {
+    return hash_impl(0, s, size);
 }
 
 class test {
