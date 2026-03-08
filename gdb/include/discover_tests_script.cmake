@@ -10,13 +10,14 @@
 
 file(READ "${LIST_OF_TESTS_FILE}" list_of_tests_contents)
 string(REGEX REPLACE
-    "(\"[^\n]+\")\n"
+    "(\"([^\n]+)\")\n"
     "
         add_test(
             [===[\\1]===]
             gdb -batch
-                -ex \"file ${BINARY_DIR}/${TARGET_NAME}${CMAKE_EXECUTABLE_SUFFIX}\"
-                -ex \"source ${FRAMEWORK_FILE}\"
+                -ex [===[file ${BINARY_DIR}/${TARGET_NAME}${CMAKE_EXECUTABLE_SUFFIX}]===]
+                -ex [===[python k3_gdb_mode = \"run=\\2\"]===]
+                -ex [===[source ${FRAMEWORK_FILE}]===]
         )
     "
     list_of_tests_contents "${list_of_tests_contents}"

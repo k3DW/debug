@@ -97,22 +97,30 @@ def exit_handler(event):
 
 
 
-class RunAllCallbacks:
+class RunCallbacks:
+    test_name : str | None = None
+
     @staticmethod
     def on_test_start(test_name: str):
-        if test_name in runner.test_results:
-            framework_errors.append(f"Test name seen twice: {test_name}")
-        runner.test_results[test_name] = TestResult(test_name)
-        assert runner.current_test_results is None
-        runner.current_test_results = runner.test_results[test_name]
+        if RunCallbacks.test_name is not None and test_name != RunCallbacks.test_name:
+            runner.skip_to_next_test = True
+        else:
+            if test_name in runner.test_results:
+                framework_errors.append(f"Test name seen twice: {test_name}")
+            runner.test_results[test_name] = TestResult(test_name)
+            assert runner.current_test_results is None
+            runner.current_test_results = runner.test_results[test_name]
 
     @staticmethod
     def on_test_finish(test_name: str):
-        if test_name not in runner.test_results:
-            framework_errors.append(f"Test name missing: {test_name}")
-        assert runner.current_test_results is not None
-        runner.current_test_results = None
-        runner.skip_to_next_test = False
+        if RunCallbacks.test_name is not None and test_name != RunCallbacks.test_name:
+            runner.skip_to_next_test = False
+        else:
+            if test_name not in runner.test_results:
+                framework_errors.append(f"Test name missing: {test_name}")
+            assert runner.current_test_results is not None
+            runner.current_test_results = None
+            runner.skip_to_next_test = False
 
     @staticmethod
     def on_check_prints(frame: gdb.Frame, call_info: gdb.Symtab_and_line):
@@ -198,12 +206,16 @@ class DiscoveryCallbacks:
 
 
 
-callbacks_cls = RunAllCallbacks
 if 'k3_gdb_mode' in globals():
     k3_gdb_mode = k3_gdb_mode
     assert type(k3_gdb_mode) == str
-    if k3_gdb_mode == "run_all":
-        pass
+    if k3_gdb_mode.startswith("run"):
+        match = re.search(r"^run(?:=(.+))?$", k3_gdb_mode)
+        if match is None:
+            print(f"Unrecognized 'k3_gdb_mode' for 'run': {json.dumps(k3_gdb_mode)}")
+            sys.exit(1)
+        callbacks_cls = RunCallbacks
+        RunCallbacks.test_name = match.group(1)
     elif k3_gdb_mode.startswith("discovery"):
         match = re.search(r"^discovery(?:=(.+))?$", k3_gdb_mode)
         if match is None:
@@ -214,6 +226,8 @@ if 'k3_gdb_mode' in globals():
     else:
         print(f"Unrecognized 'k3_gdb_mode': {json.dumps(k3_gdb_mode)}")
         sys.exit(1)
+else:
+    callbacks_cls = RunCallbacks
 
 
 

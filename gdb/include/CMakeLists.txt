@@ -22,7 +22,7 @@ function(k3_gdb_add_test target)
         TARGET ${target} POST_BUILD
         COMMAND gdb -batch
             -ex "file ${CMAKE_CURRENT_BINARY_DIR}/${target}"
-            -ex "python k3_gdb_mode = 'discovery=${generated_file}'"
+            -ex "python k3_gdb_mode = \"discovery=${generated_file}\""
             -ex "source ${framework_py}"
         COMMAND ${CMAKE_COMMAND}
             -D "TARGET_NAME=${target}"
