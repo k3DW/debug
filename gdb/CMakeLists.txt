@@ -9,3 +9,4 @@ project(k3_gdb LANGUAGES CXX)
 enable_testing()
 
 add_subdirectory(include)
+add_subdirectory(tests)
