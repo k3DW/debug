@@ -4,7 +4,7 @@ A lightweight unit testing framework for GDB pretty-printers.
 
 ## Support
 
-GCC and Clang, C++17 and up.
+GCC and Clang, C++14 and up.
 
 **Note: You must build with debug symbols (`-g`) when using this library.**
 

@@ -15,7 +15,8 @@
 #error "Unsupported compiler"
 #endif
 
-namespace k3::gdb {
+namespace k3 {
+namespace gdb {
 
 template <class... Ts>
 K3_GDB_NO_INLINE void _breakpoint_do_not_call_this_directly(const Ts&...) {}
@@ -101,29 +102,35 @@ inline void main(const int argc, const char* const* const argv) {
     runner::get().exec(argc, argv);
 }
 
-} // namespace k3::gdb
+} // namespace gdb
+} // namespace k3
 
 #define K3_GDB_CAT_(A, B) A ## B
 #define K3_GDB_CAT(A, B) K3_GDB_CAT_(A, B)
 
-#define TEST(NAME)                                                          \
-    template <size_t hash>                                                  \
-    class k3_gdb_test_impl_;                                                \
-    template <>                                                             \
-    class k3_gdb_test_impl_<(K3_GDB_CAT(NAME, _k3_gdb_hash))> {             \
-    private:                                                                \
-        static void _k3_gdb_run();                                          \
-        static inline const bool _k3_gdb_init = ::k3::gdb::runner::get()    \
-            .add(::k3::gdb::test((NAME), &_k3_gdb_run));                    \
-    };                                                                      \
+#define TEST(NAME)                                                                 \
+    template <::k3::gdb::size_t hash>                                              \
+    class k3_gdb_test_impl_;                                                       \
+    template <>                                                                    \
+    class k3_gdb_test_impl_<(K3_GDB_CAT(NAME, _k3_gdb_hash))> {                    \
+    private:                                                                       \
+        static void _k3_gdb_run();                                                 \
+        static const bool _k3_gdb_init;                                            \
+    };                                                                             \
+    const bool k3_gdb_test_impl_<(K3_GDB_CAT(NAME, _k3_gdb_hash))>::_k3_gdb_init = \
+        ::k3::gdb::runner::get().add(::k3::gdb::test((NAME), &_k3_gdb_run));       \
     void k3_gdb_test_impl_<(K3_GDB_CAT(NAME, _k3_gdb_hash))>::_k3_gdb_run()
 
-namespace k3::gdb::checks {
+namespace k3 {
+namespace gdb {
+namespace checks {
 
 using k3::gdb::assert_prints;
 using k3::gdb::expect_prints;
 
-} // namespace k3::gdb::checks
+} // namespace checks
+} // namespace gdb
+} // namespace k3
 
 using k3::gdb::operator ""_k3_gdb_hash;
 
